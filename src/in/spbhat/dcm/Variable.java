@@ -43,37 +43,7 @@ public class Variable {
         this.state = state;
 
         this.computation = computation;
-        setDependentVariables(computation);
-    }
-
-    private void setDependentVariables(Computation computation) {
-        if (this.computation != null) {
-            for (Variable input : this.computation.inputs) {
-                input.dependentVariables.remove(this);
-            }
-        }
-
-        if (computation == null) {
-            return;
-        }
-
-        for (Variable input : computation.inputs) {
-            input.dependentVariables.add(this);
-        }
-    }
-
-    private void setStaleStateOfDependents() {
-        for (Variable dependentVariable : dependentVariables) {
-            dependentVariable.setStaleState();
-        }
-    }
-
-    private void setStaleState() {
-        System.out.println(name + ": stale");
-        this.state = State.STALE;
-        for (Variable dependentVariable : dependentVariables) {
-            dependentVariable.setStaleState();
-        }
+        resetDependentVariables(computation);
     }
 
     public void setComputation(Computation computation) {
@@ -82,7 +52,7 @@ public class Variable {
             return;
         }
 
-        setDependentVariables(computation);
+        resetDependentVariables(computation);
 
         this.computation = computation;
         setStaleState();
@@ -134,5 +104,35 @@ public class Variable {
     @Override
     public String toString() {
         return name + ": " + value();
+    }
+
+    private void resetDependentVariables(Computation computation) {
+        if (this.computation != null) {
+            for (Variable input : this.computation.inputs) {
+                input.dependentVariables.remove(this);
+            }
+        }
+
+        if (computation == null) {
+            return;
+        }
+
+        for (Variable input : computation.inputs) {
+            input.dependentVariables.add(this);
+        }
+    }
+
+    private void setStaleStateOfDependents() {
+        for (Variable dependentVariable : dependentVariables) {
+            dependentVariable.setStaleState();
+        }
+    }
+
+    private void setStaleState() {
+        System.out.println(name + ": stale");
+        this.state = State.STALE;
+        for (Variable dependentVariable : dependentVariables) {
+            dependentVariable.setStaleState();
+        }
     }
 }
