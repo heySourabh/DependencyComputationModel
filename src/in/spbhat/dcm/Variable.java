@@ -11,9 +11,10 @@ public class Variable {
     private static final Set<String> allVariables = new HashSet<>();
 
     private static final double MIN_TOLERANCE = 1e-15;
-    private static final boolean ALLOW_LOOPS = true;
+    private static boolean allowLoops = false;
 
     private final Set<Variable> dependentVariables = new HashSet<>(1);
+    private boolean converged = true;
     private double tolerance = MIN_TOLERANCE;
 
     private final String name;
@@ -66,7 +67,8 @@ public class Variable {
 
     public double value() {
         if (state == State.COMPUTING) {
-            if (ALLOW_LOOPS) {
+            if (allowLoops) {
+                converged = false;
                 return this.value;
             }
             throw new IllegalStateException(name + ": loop detected during computation.");
@@ -78,11 +80,15 @@ public class Variable {
                 throw new IllegalStateException(name + ": value or computation is not defined.");
             }
             state = State.COMPUTING;
-            this.value = computation.compute();
+            double computedValue = computation.compute();
+            if (!converged && Math.abs(computedValue - this.value) <= tolerance) {
+                converged = true;
+            }
+            this.value = computedValue;
             state = State.UP_TO_DATE;
         }
 
-        return value;
+        return this.value;
     }
 
     public void setValue(double value) {
@@ -99,6 +105,35 @@ public class Variable {
 
         this.value = value;
         setStaleStateOfDependents();
+    }
+
+    public double computeConvergedValue(int maxIterations) {
+
+        allowLoops = true;
+
+        if (!converged) {
+            setStaleState();
+        }
+
+        int iter = 0;
+        for (; iter < maxIterations; iter++) {
+            value();
+            if (isConverged()) {
+                break;
+            }
+        }
+
+        allowLoops = false;
+
+        System.out.println("Iterations: " + iter + ", state: " + state);
+        return this.value;
+    }
+
+    private boolean isConverged() {
+        if (!converged) {
+            setStaleState();
+        }
+        return converged;
     }
 
     public static Set<String> declaredVariables() {
