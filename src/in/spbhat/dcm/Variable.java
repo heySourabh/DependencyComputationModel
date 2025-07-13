@@ -11,6 +11,7 @@ public class Variable {
     private static final Set<String> allVariables = new HashSet<>();
 
     private static final double MIN_TOLERANCE = 1e-15;
+    private static final boolean ALLOW_LOOPS = true;
 
     private final Set<Variable> dependentVariables = new HashSet<>(1);
     private double tolerance = MIN_TOLERANCE;
@@ -65,16 +66,19 @@ public class Variable {
 
     public double value() {
         if (state == State.COMPUTING) {
+            if (ALLOW_LOOPS) {
+                return this.value;
+            }
             throw new IllegalStateException(name + ": loop detected during computation.");
         }
 
         if (state == State.STALE) {
-            System.out.println(name + ": computing ...");
+//            System.out.println(name + ": computing ...");
             if (computation == null) {
                 throw new IllegalStateException(name + ": value or computation is not defined.");
             }
             state = State.COMPUTING;
-            value = computation.compute();
+            this.value = computation.compute();
             state = State.UP_TO_DATE;
         }
 
@@ -129,7 +133,10 @@ public class Variable {
     }
 
     private void setStaleState() {
-        System.out.println(name + ": stale");
+        if (this.state == State.STALE) {
+            return;
+        }
+//        System.out.println(name + ": stale");
         this.state = State.STALE;
         for (Variable dependentVariable : dependentVariables) {
             dependentVariable.setStaleState();
