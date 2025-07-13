@@ -1,4 +1,4 @@
-package in.spbhat;
+package in.spbhat.dcm;
 
 public abstract class Computation {
     public final Variable[] inputs;
