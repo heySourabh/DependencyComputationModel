@@ -1,4 +1,4 @@
-package in.spbhat.examples;
+package in.spbhat.dcm.examples;
 
 import in.spbhat.dcm.Computation;
 import in.spbhat.dcm.Variable;
